@@ -18,12 +18,14 @@ stages:
       - job: Build
         displayName: 'Build'
         steps:
-          - task: UseJavaVersion@1
-            inputs:
-              versionSpec: '11'
-              addToPath: true
-
-          - script: 'mvn clean package'
+          - script: |
+              sudo apt-get update
+              sudo apt-get install -y openjdk-11-jdk  # Install the desired Java version
+              echo "JAVA_HOME=$(java -XshowSettings:properties -version 2>&1 | grep 'java.home' | awk '{print $3}')" | sudo tee /etc/environment
+              echo "PATH=$JAVA_HOME/bin:$PATH" | sudo tee -a /etc/environment
+              source /etc/environment
+              java -version  # Verify Java version
+              mvn clean package
             displayName: 'Build with Maven'
 
   - stage: DockerBuild
@@ -36,24 +38,9 @@ stages:
           - task: Docker@2
             displayName: 'Build Docker image'
             inputs:
-              containerRegistry: 'thatsha'  # Replace with your Docker Hub connection name
-              repository: 'yourdockerhubusername/selenium-project'
+              containerRegistry: 'Docker Registry'  # Replace with your Docker Hub connection name
+              repository: 'thatsha/selenium-project'
               command: 'build'
               Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
               buildContext: '$(Build.SourcesDirectory)'
-              tags: 'latest'
-
-  - stage: PushToDockerHub
-    displayName: 'Push Docker image to Docker Hub'
-    dependsOn: DockerBuild
-    jobs:
-      - job: Push
-        displayName: 'Push'
-        steps:
-          - task: Docker@2
-            displayName: 'Push Docker image'
-            inputs:
-              containerRegistry: 'thatsha'  # Replace with your Docker Hub connection name
-              repository: 'yourdockerhubusername/selenium-project'
-              command: 'push'
               tags: 'latest'
