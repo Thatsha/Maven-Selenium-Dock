@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package
 
 # Use another base image with Java and JRE pre-installed
-FROM openjdk:11-jre-slim
+FROM adoptopenjdk:11-jre-hotspot
 
 # Set the working directory in the container
 WORKDIR /app
@@ -22,3 +22,4 @@ COPY --from=build /app/target/selenium-project-1.0-SNAPSHOT.jar .
 
 # Set the command to run the JAR file
 CMD ["java", "-jar", "selenium-project-1.0-SNAPSHOT.jar"]
+
